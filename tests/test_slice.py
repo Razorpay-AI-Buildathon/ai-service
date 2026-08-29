@@ -13,7 +13,8 @@ class TestVerticalSliceCases(unittest.TestCase):
         root_dir = str(Path(__file__).parent.parent.parent)
         if root_dir not in sys.path:
             sys.path.insert(0, root_dir)
-        events_path = Path(__file__).parent.parent.parent / "backend" / "tests" / "synthetic_events.json"
+        local_path = Path(__file__).parent / "synthetic_events.json"
+        events_path = local_path if local_path.exists() else Path(__file__).parent.parent.parent / "backend" / "tests" / "synthetic_events.json"
         with open(events_path, "r") as f:
             self.events = json.load(f)
 
