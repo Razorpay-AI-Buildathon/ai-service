@@ -73,7 +73,8 @@ def send_proposal_to_action_guard(state: dict) -> dict:
                     amount = float(state.get("amount", 0.0))
                     current_attempts = state.get("recovery_attempt_count", 0)
                     max_retries = state.get("max_retries", 3)
-                    if amount > 5000.0 and proposal.proposed_action != "ESCALATE_TO_HUMAN":
+                    payment_actions = ("RETRY_PAYMENT", "RETRY_SUBSCRIPTION")
+                    if amount > 5000.0 and proposal.proposed_action in payment_actions:
                         approved = False
                         violations.append("Amount exceeds guard threshold")
                     if current_attempts >= max_retries and proposal.proposed_action != "ESCALATE_TO_HUMAN":
