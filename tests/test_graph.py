@@ -28,6 +28,15 @@ class TestRecoveryCouncilWorkflow(unittest.TestCase):
         self.assertEqual(result["critic_decision"], "ACCEPT")
         self.assertFalse(result["replan_required"])
 
+        # Verify proposal properties (Task 4)
+        self.assertIn("proposal", result)
+        prop = result["proposal"]
+        self.assertEqual(prop["action_type"], "SEND_PAYMENT_REMINDER")
+        self.assertTrue(prop["confidence"] > 0)
+        self.assertIsNotNone(prop["action_id"])
+        self.assertEqual(prop["risk_score"], 0.1)
+        self.assertEqual(prop["expected_recovery_value"], round(250.00 * 0.95 * prop["confidence"], 2))
+
     def test_parallel_nodes_execution_integrity(self):
         # Asserts parallel convergence join logic. When graph executes planner node, 
         # it MUST contain inputs aggregated from diagnosis, policy, and risk nodes.

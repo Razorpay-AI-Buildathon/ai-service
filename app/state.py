@@ -17,6 +17,7 @@ class RecoveryState(TypedDict, total=False):
     recovery_attempt_count: int
     max_retries: int
     retry_count: int
+    failed_actions: List[str]
 
     # RAG playbook parameters
     playbook_matches: List[Dict[str, Any]]
@@ -60,6 +61,7 @@ class RecoveryState(TypedDict, total=False):
     final_confidence: float
     current_node: str
     action_id: str
+    proposal: Dict[str, Any]
 
     # Guardrails
     guardrail_status: str

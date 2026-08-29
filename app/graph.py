@@ -51,14 +51,42 @@ def finalize_node(state: RecoveryState):
 
     import uuid
 
-    # Keep existing action_id if present to preserve idempotent retries, otherwise generate a clean new UUID
     action_id = state.get("action_id") or f"act-{uuid.uuid4().hex}"
+
+    amount = float(state.get("amount", 0.0))
+    history_success_rate = float(state.get("customer_payment_history_success_rate", 0.90))
+    erv = amount * history_success_rate * float(final_confidence or 0.7)
+
+    risk_score = float(state.get("customer_risk_score", 0.15))
+
+    playbook_ref = "DEFAULT_PLAYBOOK"
+    if state.get("playbook_matches"):
+        playbook_ref = state["playbook_matches"][0].get("id", "DEFAULT_PLAYBOOK")
+
+    recommended_delay = 300
+    if final_action == "SEND_PAYMENT_REMINDER":
+        recommended_delay = 3600 * 2
+    elif final_action == "SEND_CHECKOUT_RECOVERY_MESSAGE":
+        recommended_delay = 1800
+
+    proposal = {
+        "action_id": action_id,
+        "action_type": final_action,
+        "confidence": float(final_confidence or 0.70),
+        "reasoning_summary": final_reason,
+        "expected_recovery_value": round(erv, 2),
+        "risk_score": risk_score,
+        "policy_basis": state.get("policy_reason", "Standard compliance policy checks passed."),
+        "playbook_reference": playbook_ref,
+        "recommended_delay_seconds": recommended_delay
+    }
 
     return {
         "final_action": final_action,
         "final_reason": final_reason,
         "final_confidence": final_confidence,
         "action_id": action_id,
+        "proposal": proposal,
         "current_node": "finalize",
     }
 
