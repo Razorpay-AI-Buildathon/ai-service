@@ -80,6 +80,8 @@ class TestVerticalSliceCases(unittest.TestCase):
         
         self.assertEqual(result["playbook_matches"][0]["playbook_id"], "PB-INV-001")
         self.assertEqual(result["final_action"], "SEND_INVOICE_REMINDER")
+        if not result["action_guard_result"]["approved"]:
+            print(f"DEBUG: test_case_2 failed. Guard result: {result['action_guard_result']}")
         self.assertTrue(result["action_guard_result"]["approved"])
 
     def test_case_3_repeated_failed_payment_blocked(self):

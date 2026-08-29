@@ -77,7 +77,7 @@ def send_proposal_to_action_guard(state: dict) -> dict:
                     if amount > 5000.0 and proposal.proposed_action in payment_actions:
                         approved = False
                         violations.append("Amount exceeds guard threshold")
-                    if current_attempts >= max_retries and proposal.proposed_action != "ESCALATE_TO_HUMAN":
+                    if current_attempts >= max_retries and proposal.proposed_action in payment_actions:
                         approved = False
                         violations.append("Retry attempts limit exceeded")
 
