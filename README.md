@@ -64,3 +64,27 @@ graph TD
     classDef endpoint fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
     class Start,FinalDecision endpoint;
 ```
+
+## Detailed Flow Explanation
+
+The multi-agent workflow operates synchronously in a pipeline pattern powered by LangGraph. When a payment failure event occurs, the context (amount, failure reason, and customer risk profile) is ingested into the graph state and evaluated iteratively by distinct AI personas:
+
+1. **Transaction Analyst Agent**: 
+   - **Scope**: Focuses exclusively on the immediate transactional context (e.g., amount, currency, network error codes like `INSUFFICIENT_FUNDS` vs `NETWORK_ERROR`).
+   - **Output**: Generates a summary of transactional feasibility, such as recommending immediate retries for network errors, but blocking retries for permanent failures like stolen cards.
+
+2. **Customer Risk Agent**:
+   - **Scope**: Assesses historical behavior, such as the customer's payment success rate and predefined risk score.
+   - **Output**: Flags high-risk customers or customers who have failed consecutive payments.
+
+3. **Strategy Selector Agent**:
+   - **Scope**: The consensus node. It ingests the outputs from both the Analyst and Risk agents.
+   - **Output**: Synthesizes the analysis into a final actionable playbook:
+     - `RETRY_PAYMENT`: Issued when risk is low and error is transient.
+     - `ESCALATE_TO_HUMAN`: Issued when risk is high, amount is large, or multiple attempts have already been exhausted.
+     - `DO_NOTHING`: Issued for hard declines (fraud, stolen card).
+
+### Model Selection & Strategy
+For this implementation, the service seamlessly integrates with foundational LLMs (such as OpenAI's **GPT-4o** or Google's **Gemini 1.5 Pro**) to drive the reasoning engines. 
+
+The models are guided using strict system prompts designed for deterministic classification, and their responses are strictly parsed into structured JSON schemas. By offloading the subjective "playbook" decision to a multi-agent LLM council, the system dynamically handles nuanced edge cases that static IF/ELSE rules miss. Finally, a downstream deterministic **ActionGuard** sits outside the AI layer to ensure the models never violate hard business constraints (e.g., executing retries over ₹5000 without a human operator override).
