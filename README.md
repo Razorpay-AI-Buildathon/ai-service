@@ -11,6 +11,14 @@ LangGraph-powered stateful multi-agent consensus council which analyses payment 
 ### Prerequisites
 - Python 3.11
 
+### Environment Variables
+Create a `.env` file in the root `ai-service` directory:
+```env
+OPENAI_API_KEY=your-openai-api-key
+GEMINI_API_KEY=your-gemini-api-key
+BACKEND_URL=http://localhost:8000
+```
+
 ### Setup & Run
 1. Create virtual environment and install dependencies:
    ```bash
@@ -26,6 +34,12 @@ LangGraph-powered stateful multi-agent consensus council which analyses payment 
    ```bash
    pytest
    ```
+
+## Connection to Backend
+The AI Service runs as an independent microservice (`http://localhost:8001`) and exposes a single deterministic endpoint (`POST /analyze-event`) for the backend to consume. 
+- When a payment fails, the backend's `worker.py` dispatches the case context (amount, failure code, historical success rate) to this AI service.
+- The AI council processes the event and returns a structured JSON response containing the proposed `action` (e.g., `RETRY_PAYMENT`), `confidence_score`, and detailed `reasoning`.
+- The backend then takes this AI-proposed action and enforces hard constraints via the deterministic **ActionGuard** before execution.
 
 ## AI Reasoning Council Workflow
 
